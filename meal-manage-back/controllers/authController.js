@@ -2,8 +2,33 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+
 exports.register = async (req, res) => {
-  // ... Paste your registration logic from before here ...
+    try {
+      console.log('Received registration data:'); // Debug log
+    const { name, email, password } = req.body;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ message: 'Email already registered' });
+
+    // Create user
+      user = new User({ name, email, password });
+      
+      console.log('Registering user:', user); // Debug log
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    await user.save();
+
+    res.status(201).json({ 
+      message: 'Registration successful! Please wait for admin approval.' 
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.login = async (req, res) => {

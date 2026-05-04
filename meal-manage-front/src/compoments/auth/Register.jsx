@@ -1,19 +1,34 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import api from '../../utils/api';
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log("User Registered:", formData);
-    // After registration, usually send them to login or dashboard
-    navigate('/login');
+    setLoading(true);
+
+    try {
+      const res = await api.post('/auth/register', {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password
+      });
+
+      // SUCCESS TOAST
+      toast.success(res.data.msg || "Registration successful!");
+      navigate('/login');
+    } catch (err) {
+      // ERROR TOAST
+      const errorMsg = err.response?.data?.msg || "Server connection failed";
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,53 +44,45 @@ const Register = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
-                type="text"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                placeholder="Shaikat Paul"
-                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                type="text" required value={formData.fullName}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition"
+                placeholder="John Doe"
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
-                type="email"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                type="email" required value={formData.email}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition"
                 placeholder="email@example.com"
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
-                type="password"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                type="password" required value={formData.password}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition"
                 placeholder="••••••••"
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
 
-            <div className="text-xs text-gray-500">
-              By clicking Sign Up, you agree to our <span className="text-green-600 underline cursor-pointer">Terms & Conditions</span>.
-            </div>
-
             <button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-300 transform hover:-translate-y-1"
+              type="submit" disabled={loading}
+              className={`w-full text-white font-bold py-3 rounded-lg shadow-lg transition duration-300 transform ${
+                loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700 hover:-translate-y-1'
+              }`}
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
           <p className="text-center text-gray-600 mt-8">
-            Already a member?{' '}
-            <Link to="/login" className="text-green-600 font-bold hover:underline">
-              Log In
-            </Link>
+            Already a member? <Link to="/login" className="text-green-600 font-bold hover:underline">Log In</Link>
           </p>
         </div>
       </div>
